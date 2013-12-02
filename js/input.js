@@ -1,5 +1,4 @@
-
-(function() {
+define(function() {
     var pressedKeys = {};
 
     function setKey(event, status) {
@@ -37,9 +36,9 @@
         pressedKeys = {};
     });
 
-    window.input = {
+    return {
         isDown: function(key) {
             return pressedKeys[key.toUpperCase()];
         }
     };
-})();
+});

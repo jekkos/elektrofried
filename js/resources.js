@@ -1,5 +1,4 @@
-
-(function() {
+define(function() {
     var resourceCache = {};
     var loading = [];
     var readyCallbacks = [];
@@ -53,10 +52,10 @@
         readyCallbacks.push(func);
     }
 
-    window.resources = { 
+    return { 
         load: load,
         get: get,
         onReady: onReady,
         isReady: isReady
     };
-})();
+});

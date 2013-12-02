@@ -1,5 +1,4 @@
-
-(function() {
+define(['resources'], function(resources) {
     function Sprite(url, pos, size, speed, frames, dir, once) {
         this.pos = pos;
         this.size = size;
@@ -51,6 +50,7 @@
                           this.size[0], this.size[1]);
         }
     };
+    
+    return Sprite;
 
-    window.Sprite = Sprite;
-})();
+});
