@@ -1,0 +1,11 @@
+{
+	"name" : "elektrofried",
+	"version" : "0.2",
+	"dependencies" : {
+		"jquery" : "latest",
+		"requirejs" : "latest",
+		"socket.io-client" : "latest",
+		"bootstrap" : "latest"
+	}
+
+}

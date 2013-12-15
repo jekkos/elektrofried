@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="stylesheet" href="css/app.css">
+    <style type="text/css">
+     	html, body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+    <!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+	<!-- Latest compiled and minified JavaScript -->
+	<script type="text/javascript" src="bower_components/requirejs/require.js"></script>
+	<script>
+		(function () {
+		 
+		   require.config({
+		 
+		     baseUrl: "bower_components",
+		 
+		     paths: {
+		       "jquery": "jquery/jquery",
+		       "socketio": "socket.io-client/dist/socket.io",
+		       "bootstrap" : "bootstrap/dist/js/bootstrap"
+		     }
+		 
+		   });
+		 
+		 
+		   require(["jquery", "socketio"], function( $, io ) {
+			   var clientOptions;
+			   var isGrabbing = false;
+			   
+			   var socket = io.connect('http://localhost:8080').on("connect", function() {
+				   $("a#grab").click(function() {
+					   if (isGrabbing) {
+						   $(this).html("&nbsp;Grab");
+						   socket.emit("stop");
+					   } else {
+						   socket.emit("grab", {
+							   frequency : clientOptions.frequency
+						   });
+						   $(this).text("Stop");
+					   }
+					   isGrabbing = !isGrabbing;
+				   });
+				   $("a#tweet").click(function() {
+					  socket.emit("tweet", {
+						  message : $("#tweet").val(),
+					      placeId : $("#place-id").val()
+					  }); 
+				   });
+			   });
+			   socket.on("frame", function(file) {
+			   	   var img = $("#webcam").attr("src", file);			   		
+			   });
+			   socket.on("options", function(options) {
+				   clientOptions = options;
+				   $("#x").val(clientOptions.dimensions.x);
+			   	   $("#y").val(clientOptions.dimensions.y);
+		   		   $("#tweet").val(clientOptions.message);
+		   		   $("#frequency").val(clientOptions.frequency);
+		   		   $("#place-id").val(clientOptions.placeId);
+			   });
+			   
+			   $(document).ready(function() {
+					socket.emit("options");
+					$("input[type='text']").change(function() {
+						if (this.name.startsWith("dimensions")) {
+							var id = $(this).attr('id');
+							clientOptions.dimensions[id] = $(this).val();
+						} else {
+							clientOptions[this.name] = $(this).val();
+						}
+						socket.emit("options", clientOptions);
+					});
+				});
+		   });
+		 
+		})();
+		
+	</script>
+  </head>
+  <body>
+	<div style="text-align:center; margin: 20px 0px;">
+		<img id="webcam" src="images/planet.png" />
+	</div>
+  	<div style="margin: 20px 0px; text-align: center; vertical-align: middle;">
+		<span>Frequency</span>
+		<input type="text" name="frequency" id="frequency" size="4" class="input-small">
+		<span>Tiles</span>
+		<input type="text" name="dimensions.width" id="x" size="4" class="input-small">x
+		<input type="text" name="dimensions.height" id="y" size="4" class="input-small">
+		<span>PlaceId</span>
+		<input type="text" name="place-id" id="place-id" size="10" class="input-small">
+  		<span>Tweet&nbsp;</span>
+		<input type="text" name="message" id="tweet">
+		<a href="#" id="grab" class="btn btn-primary"><span class="glyphicon glyphicon-facetime-video"></span>&nbsp;Grab</a>
+		<a href="#" id="tweet" class="btn btn-primary"></span>Tweet</a>
+	</div>
+  </body>
+</html>

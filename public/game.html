@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="stylesheet" href="css/app.css">
+    <style type="text/css">
+     html, body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        body:after {
+            font-size: 30px;
+            line-height: 140px;
+            text-align: center;
+            color: rgb(60, 16, 11);
+            background: rgba(255, 255, 255, 0.6);
+            position: absolute;
+            top: 50%;
+            left: 40%;
+            width: 700px;
+            height: 140px;
+            margin-left: -200px;
+            margin-top: -70px;
+            border-radius: 5px;
+        }
+        body.before-game:after {
+            content: 'Druk beide controller in om te beginnen';
+        }
+        body.lose-game:after {
+            content: 'Game Over! You have been Elektrofied!';
+        }
+        /* spaceship from: http://millionthvector.blogspot.ca/p/free-sprites.html */
+        /* starfield from: http://gamedevtuts.s3.amazonaws.com/043_freeShmupSprites/Free_Shmup_Sprites_Starfield.png */
+        body {
+            background: url(img/starfield.png) 0 0 repeat;
+        }
+    </style>
+  </head>
+  <body>
+    <div id="game-over-overlay">
+    </div>
+
+    <div id="game-over">
+      <h1>GAME OVER</h1>
+      <button id="play-again">Play Again</button>
+    </div>
+
+    <div class="wrapper"></div>
+    
+    <script type="text/javascript" data-main="js/game.js" src="js/require.js"></script>
+  </body>
+</html>

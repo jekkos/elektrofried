@@ -7,7 +7,7 @@ html, body {
 canvas {
     display: block;
     margin: auto;
-	background: url(../img/background.jpg);
+	background: url(../img/starfield.png);
     position: absolute;
     top: 0;
     bottom: 0;
@@ -25,6 +25,15 @@ canvas {
     float: left;
     font-family: sans-serif;
     color: #757575;
+}
+
+#floating-score {
+	position: absolute;
+	right: 100px;
+	top:20px;	
+	color: white;
+	font-size: 1.2em;
+	font-style: bold;
 }
 
 #score {
