@@ -4,7 +4,7 @@ var logger = require('winston');
 var twitterer = require('./twitterer');
 var gifBuilder = require('./gifbuilder');
 var tileBuilder = require('./tilebuilder');
-var serial = require("serialport").SerialPort
+var SerialPort = require("serialport").SerialPort;
 
 Object.spawn = function (parent, props) {
 	var defs = {}, key;
@@ -118,13 +118,18 @@ exports.app = (function() {
 			var fileName = TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
 			// TODO output filename.. best to specify???
 			var lastFrame = frames[frames.length - 1];
-			tileBuilder.build(fileName, frames, dimensions);
-			var newTweet = Object.spawn(tweet, {message : data.message, 
-				placeId : data.placeId || options.placeId, 
-				fileName : fileName});
-			twitterer.upload(newTweet);
-			socket.emit("tiledpic", {
-				url : newTweet.getUrl()
+			tileBuilder.build(fileName, frames, options.dimensions, function (err) {
+				if (err) {
+					logger.error(err);
+				} else {
+					var newTweet = Object.spawn(tweet, {message : data.message, 
+						placeId : data.placeId || options.placeId, 
+						fileName : fileName});
+					twitterer.upload(newTweet);
+					socket.emit("tiledpic", {
+						url : newTweet.getUrl()
+					});
+				}
 			});
 		// create animated gif...
 		/*var gif = gifBuilder.build(fileName, frames, dimensions, function(status, error) {

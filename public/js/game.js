@@ -119,10 +119,10 @@ require(
   var init = function init( world, Physics ){
   
 	ball = Physics.body('circle', {
-      x: 400,
+      x: 100,
       y: 100,
-      vx: 0.08,
-      vy: 0.08,
+      vx: 0.09,
+      vy: 0.09,
       radius: 15
     });
     

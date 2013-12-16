@@ -97,13 +97,8 @@ exports.upload = (function() {
 		
 		request.on('response', function (response) {            
 			response.setEncoding('utf8');            
-			response.on('data', function (chunk) {
-				logger.info(chunk.entities);
-				// TODO get url back 
-				//tweet.tweetUrl = media && media.url;
-				//logger.info("Media url is " + tweet.tweetUrl);
-			});
 			response.on('end', function () {
+				logger.info("Entities: " + response.data);
 				logger.info(response.statusCode +'\n');
 			});
 		});    
