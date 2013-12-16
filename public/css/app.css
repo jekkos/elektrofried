@@ -4,6 +4,24 @@ html, body {
     background-color: #151515;
 }
 
+.bird {
+	background: url('imgs/bird_sheet.png') no-repeat -520px -115px;
+	width: 45px;
+	height: 44px;
+}
+
+.bird1 {
+	background: url('imgs/bird_sheet.png') no-repeat -521px -303px;
+	width: 45px;
+	height: 43px;
+}
+
+.bird2 {
+	background: url('imgs/bird_sheet.png') no-repeat -521px -209px;
+	width: 45px;
+	height: 44px;
+}
+
 canvas {
     display: block;
     margin: auto;
@@ -13,6 +31,7 @@ canvas {
     bottom: 0;
     left: 0;
     right: 0;
+    border: 2px solid white;
 }
 
 .wrapper {

@@ -30,10 +30,6 @@ define(function() {
         return key;
     };
     
-    document.addEventListener('keypress', function(e) {
-        setKey(e, true);
-    });
-
    /* document.addEventListener('keydown', function(e) {
         setKey(e, false);
     });
