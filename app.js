@@ -1,10 +1,11 @@
-var Camelot = require('camelot'), events = require('events');
-var server = require('http').Server(), io = require('socket.io').listen(8080);
+var config = require('./config');
+var server = require('http').Server(), io = require('socket.io').listen(config.DEFAULT_PORT);
 var logger = require('winston');
 var twitterer = require('./twitterer');
 var gifBuilder = require('./gifbuilder');
 var tileBuilder = require('./tilebuilder');
-var SerialPort = require("serialport").SerialPort;
+var serialConnector = require('./serialconnector');
+var frameGrabber = require('./framegrabber');
 
 Object.spawn = function (parent, props) {
 	var defs = {}, key;
@@ -17,18 +18,6 @@ Object.spawn = function (parent, props) {
 };
 
 exports.app = (function() {
-	
-	var SERVER_URL = 'http://localhost/elektrofried/';
-	var FILE_ROOT = '/home/jekkos/workspace/elektrofried/';
-	var DEFAULT_TITLE = 'Elektrofried!';
-	var DEFAULT_MESSAGE = 'Test twitpic upload';
-	var FRAME_SIZE = 3;
-	var TMP_DIR = 'tmp/camelot/';
-	var TMP_TILE_DIR = 'tmp/tiles';
-	
-	var serial = new SerialPort("/dev/ttyUSB0", {
-		  baudrate: 9600
-	});
 	
 	var dimensions = {
 	    x : 2,
@@ -43,128 +32,93 @@ exports.app = (function() {
 	var options = {
 		dimensions : dimensions,
 		frequency : 1,
-		placeId : '@appsaloon',
+		placeId : config.DEFAULT_PLACE_ID,
 		quality : 90,
-		message : DEFAULT_MESSAGE
+		message : config.DEFAULT_MESSAGE
 	};
 	
 	var sockets = [];
-	var frames = [];
 	var tweets = [];
+	var score;
 	
-	// contains animated gif 
-	var frame = {
-		getPath : function() {
-			return FILE_ROOT + this.fileName;
-		},
-		getUrl : function() {
-			return SERVER_URL + this.fileName;
-		}
-	};
-	
-	var tweet = Object.spawn(frame, {
+	var tweet = Object.spawn(frameGrabber.frame, {
 		getMessage : function() {
-			return this.message;
+			return this.message.replace(/\$score/g, this.score) || config.DEFAULT_MESSAGE;
 		},
 		getTitle : function() {
-			return this.title || DEFAULT_TITLE;
+			return this.title || config.DEFAULT_TITLE;
 		},
 		getPlaceId : function() {
-			return this.placeId;
+			return this.placeId || config.DEFAULT_PLACE_ID;
 		}
 	});
-	
-	//pic has: filepaht, tweet, 
-	var camelot = new Camelot( {
-		'device' : '/dev/video0',
-		'input' : 0,
-		'skip' : 1,
-		'no-banner' : true,
-		'resolution' : dimensions.toString(),
-		'controls' : {
-			brightness : 2,
-			contrast : 3,
-			saturation : 3,
-			hue : 0,
-			sharpness : 9,
-			gamma : 1
-		}
-	});
-	
-	camelot.on('frame', function (fileName) {
-		logger.info('frame received!');
-		for (var i = 0; i < sockets.length; i++) {
-			var newFrame = Object.spawn(frame, {
-				fileName : fileName
-			});
-			frames.push(newFrame);
-			sockets[i].emit("frame", newFrame.getUrl());
-		}
-	});
-	
-	camelot.on('error', function (err) {
-		logger.error(err.toString());
-	});
-	
-	var grabPic = function(data) {
-		camelot.grab( {
-			'frequency' : data.frequency || options.frequency,
-			'jpeg' : data.quality || options.quality
-		});
-	};
 	
 	var tweetPic = function(socket) {
 		return function(data) {
-			var fileName = TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
-			// TODO output filename.. best to specify???
-			var lastFrame = frames[frames.length - 1];
-			tileBuilder.build(fileName, frames, options.dimensions, function (err) {
+			var fileName = config.TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
+			logger.info("About to upload " + fileName + " to twitter");
+			tileBuilder.build(fileName, frameGrabber.getFrames(), options.dimensions, function (err) {
 				if (err) {
 					logger.error(err);
 				} else {
-					var newTweet = Object.spawn(tweet, {message : data.message, 
+					currentTweet = Object.spawn(tweet, {message : data.message, score: score,
 						placeId : data.placeId || options.placeId, 
 						fileName : fileName});
-					twitterer.upload(newTweet);
-					socket.emit("tiledpic", {
-						url : newTweet.getUrl()
+					twitterer.upload(currentTweet);
+					socket.emit("pic-tweeted", {
+						url : currentTweet.getUrl()
 					});
 				}
 			});
-		// create animated gif...
-		/*var gif = gifBuilder.build(fileName, frames, dimensions, function(status, error) {
-			if (status) {
-				logger.info('tweeting');
-				tweets.push(newTweet);
-			} else {
-				logger.error(error);
-			}
-		});*/
 		};
 	};
+	
+	var parseOptions = function(socket) {
+		return function(data) {
+			if (data) {
+				options = Object.spawn(options, data);
+				logger.info("options changed " + JSON.stringify(options));
+			} else {
+				socket.emit('options', options);
+			}
+		};
+	};
+	
+	frameGrabber.init(dimensions, function(frame) {
+		for (var i = 0; i < sockets.length; i++) {
+			sockets[i].emit("frame", frame.getUrl());
+		}
+	});
+	logger.info("Initializing serial connector " + JSON.stringify(serialConnector));
+	serialConnector.init();
+	
 	io.on('connection', function(socket) {
 		sockets.push(socket);
 		logger.info('socket opened!');
 		socket.on('disconnect', function() {
 			sockets.splice(sockets.indexOf(socket), 1);
 		});
-		socket.on('grab', grabPic);
-		socket.on('stop', camelot.stop);
-		socket.on('shock', function() {
-			serialPort.write("s\n", function(err, results) {
-				logger.error(err);
-				logger.info('results ' + results);
-			});
+		socket.on('grab-start', frameGrabber.startGrabbing);
+		socket.on('grab-stop', frameGrabber.stopGrabbing);
+		socket.on('shock', function(data) {
+			serialConnector.shock();
+		});
+		socket.on('game-started', function(data) {
+			// parse options from data
+			parseOptions(socket);
+			score = 0;
+			serialConnector.startGame();
+			frameGrabber.startGrabbing(options);
+		});
+		socket.on('game-stopped', function(data) {
+			// feedback to teensy
+			score = data.score;
+			// name and email?
+			serialConnector.stopGame();
+			frameGrabber.stopGrabbing();
 		});
 		socket.on('tweet', tweetPic(socket));
-		socket.on('options', function(data) {
-			if (data) {
-				options = Object.spawn(options, data);
-				logger.info("Options changed " + JSON.stringify(options));
-			} else {
-				socket.emit('options', options);
-			}
-		});
+		socket.on('options', parseOptions(socket));
 	});
 	
 	

@@ -1,3 +1,4 @@
+var config = require('./config');
 var OAuthEcho = require('oauth').OAuthEcho;
 var OAuth = require('oauth').OAuth;
 var fs = require('fs');
@@ -7,24 +8,14 @@ var http = require('http');
 
 exports.upload = (function() {
 	
-	var accessToken = '2233328443-hXmonPb82V7kxcNy2NbwdGFIEZrxWtSxWbef59Y';
-	var tokenSecret = 'GhfeIp4fIJMV6qGJbDAJ7Fj7vceHMb9rz5vZpIYrrsM5V';
-	var consumerKey = 'YdkLUWxHIAn0u2mlRV6Nkw';
-	var consumerSecret = 'SLlTcBtUeqzvoqXxTNzAkXylkuTYAR7oSvromKi9c';
-	var apiKey = '2b8b27c20a414b31bbbd94bb06e714fc';
-	
-	var useProxy = false;
-	
-	var boundary = '---------------------------10102754414578508781458777923';
-	var separator = '--' + boundary;
 	var crlf = "\r\n";
 	
 	var tweet = function(tweet) {
 		var twitterer = new OAuth(
 				"https://api.twitter.com/oauth/request_token",
 				"https://api.twitter.com/oauth/access_token",
-				consumerKey,
-				consumerSecret,
+				config.consumerKey,
+				config.consumerSecret,
 				"1.0",
 				null,
 				"HMAC-SHA1"
@@ -32,9 +23,9 @@ exports.upload = (function() {
 
 		var authorization = twitterer.authHeader(
 				'http://api.twitter.com/1.1/statuses/update_with_media.json',
-				accessToken, tokenSecret, 'POST');
+				config.accessToken, config.tokenSecret, 'POST');
 		logger.debug("Auth headers: " + authorization);
-		var multipartBody = buildMultipartBody(tweet, boundary);
+		var multipartBody = buildMultipartBody(tweet, config.BOUNDARY);
 		
 		var hostname = 'api.twitter.com';
 		
@@ -43,13 +34,13 @@ exports.upload = (function() {
 				'Accept' : "*/*",
 				'Authorization' : authorization,
 				'Content-Length': multipartBody.length,
-				'Content-Type': 'multipart/form-data; boundary=' + boundary
+				'Content-Type': 'multipart/form-data; boundary=' + config.BOUNDARY
 		};
 		
 		var options = {
 //				host: hostname,
-				host: useProxy ? "localhost" : hostname,
-				port: useProxy ? 8090 : 80,
+				host: config.USE_PROXY ? "localhost" : hostname,
+				port: config.USE_PROXY ? 8090 : 80,
 				path: 'http://api.twitter.com/1.1/statuses/update_with_media.json',
 				method: 'POST',
 				headers: headers
@@ -63,17 +54,17 @@ exports.upload = (function() {
 		return 'Content-Disposition: form-data; name="' + fieldName + '"' + crlf
 		+ crlf
 		+ fieldData + crlf
-		+ separator + crlf;
+		+ config.SEPARATOR + crlf;
 	};
 	
 	var buildMultipartBody = function(tweet, boundary) {
 		var data = fs.readFileSync(tweet.getPath());
 
-		var footer = crlf + separator + '--' + crlf;
+		var footer = crlf + config.SEPARATOR + '--' + crlf;
 		var fileHeader = 'Content-Disposition: form-data; name="media"; filename="' + tweet.getTitle() + '"';
 		
-		var contents = separator + crlf
-		+ addFormData("key", apiKey)
+		var contents = config.SEPARATOR + crlf
+		+ addFormData("key", config.apiKey)
 		+ addFormData("status", tweet.getMessage())
 		+ addFormData("place_id", tweet.getPlaceId())
 		+ fileHeader + crlf
@@ -110,17 +101,17 @@ exports.upload = (function() {
 		var oauth = new OAuthEcho(
 				'http://api.twitter.com/',
 				'http://api.twitter.com/1.1/account/verify_credentials.json',
-				consumerKey,
-				consumerSecret,
+				config.consumerKey,
+				config.consumerSecret,
 				'1.0', 'HMAC-SHA1');
 		
-		var multipartBody = buildMultipartBody(tweet, boundary);
+		var multipartBody = buildMultipartBody(tweet, config.BOUNDARY);
 		
 		var hostname = 'api.twitpic.com';
 		// this is correct..
 		var authorization = oauth.authHeader(
 				'http://api.twitpic.com/2/upload.json',
-				accessToken, tokenSecret, 'POST');
+				config.accessToken, config.tokenSecret, 'POST');
 		logger.debug("Auth headers: " + authorization);
 		var headers = {
 				'Host': hostname,
@@ -128,20 +119,20 @@ exports.upload = (function() {
 				'X-Auth-Service-Provider' : 'http://api.twitter.com/1.1/account/verify_credentials.json',
 				'X-Verify-Credentials-Authorization' : authorization,
 				'Content-Length': multipartBody.length,
-				'Content-Type': 'multipart/form-data; boundary=' + boundary
+				'Content-Type': 'multipart/form-data; config.BOUNDARY=' + config.BOUNDARY
 		};
 		
 		var options = {
-				host: useProxy ? "localhost" : hostname,
-				port: useProxy ? 8090 : 80,
+				host: config.USE_PROXY ? "localhost" : hostname,
+				port: config.USE_PROXY ? 8090 : 80,
 				path: 'http://api.twitter.com/1.1/statuses/update_with_media.json',
 				method: 'POST',
 				headers: headers
 		};
 		
 		var options = {
-				host: useProxy ? "localhost" : hostname,
-				port: useProxy ? 8090 : 80,
+				host: config.USE_PROXY ? "localhost" : hostname,
+				port: config.USE_PROXY ? 8090 : 80,
 				port: 80,
 				path: 'http://api.twitpic.com/2/upload.json',
 				method: 'POST',

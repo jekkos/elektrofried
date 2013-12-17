@@ -45,9 +45,9 @@
 				   $("a#grab").click(function() {
 					   if (isGrabbing) {
 						   $(this).html("&nbsp;Grab");
-						   socket.emit("stop");
+						   socket.emit("grab-stop");
 					   } else {
-						   socket.emit("grab", {
+						   socket.emit("grab-start", {
 							   frequency : clientOptions.frequency
 						   });
 						   $(this).text("Stop");

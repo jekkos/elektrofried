@@ -3125,9 +3125,10 @@ Physics.geometry.nearestPointOnLine = function nearestPointOnLine( pt, linePt1, 
          * @return {this} 
          */
         addBody: function( body ){
-
-            body.setWorld( this );
-            this._bodies.push( body );
+        	if (body._world !== this) {
+        		body.setWorld( this );
+        		this._bodies.push( body );
+        	}
             return this;
         },
 

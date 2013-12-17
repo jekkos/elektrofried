@@ -20,8 +20,6 @@ require(
   // official modules
   'physicsjs/renderers/canvas',
   'physicsjs/bodies/circle',
-  'physicsjs/bodies/convex-polygon',
-  'physicsjs/behaviors/newtonian',
   'physicsjs/behaviors/sweep-prune',
   'physicsjs/behaviors/body-collision-detection',
   'physicsjs/behaviors/body-impulse-response',
@@ -40,6 +38,12 @@ require(
   var socket = io.connect('http://localhost:8080');
   var width = 800;
   var height = 400;
+  
+  var score = 0;
+  var timeStarted = 0;
+  var bounces = 0;
+  
+  var ball;
 
   var renderer = Physics.renderer('canvas', {
     el: 'viewport',
@@ -56,17 +60,7 @@ require(
       }
     }
   });
-  
-  /*$win.on('resize', function(){
-    renderer.el.width = parent.innerWidth;
-    renderer.el.height = parent.innerHeight;
-    viewWidth = $win.width();
-    viewHeight = $win.height();
-    viewportBounds = Physics.aabb(0, 0, viewWidth, viewHeight);
-    edgeBounce.setAABB( viewportBounds );
-  }).trigger('resize');*/
-  var ball;
-  
+
   var buildController1 = function() {
 	  return buildController(0);
   };
@@ -134,14 +128,10 @@ require(
     });
   };
   
-  var score = 0;
-  var timeStarted = 0;
-  var bounces = 0;
-  
   function drawScore() {
 	if (inGame) {
 		var secondsPlaying = new Date().getSeconds() - timeStarted; 
-		score = Math.round(secondsPlaying * 100 + bounces * 20 );
+		score = secondsPlaying * 100 + bounces * 20;
 		$("#floating-score").text("Score: " + score);
 		console.log("new score found " + score);
 	}
@@ -152,9 +142,7 @@ require(
 	bounces = 0;
 	timeStarted = new Date().getSeconds();
     
-    if (world){
-      world.destroy();
-    }
+	world && world.destroy();
     if ($("#floating-score").length === 0) {
     	$("<div />").attr("id","floating-score").text("Score: " + score).appendTo($("body"));	
     }
@@ -167,25 +155,34 @@ require(
         // set the integrator (may also be set with world.add())
         integrator: 'verlet'
     }, init );
-    world.subscribe('lose-game', function(){
+    
+    world.subscribe('game-stopped', function(){
       document.body.className = 'lose-game';
       $("<div />").attr("id","score").text("Score: " + score).appendTo($("body.wrapper"));
     });
     
-    // subscribe to collision pair
     world.subscribe('collision-pair', function( data ){
     	inGame = false;
-        // data.bodyA; data.bodyB...
-    	socket.emit("tweet", {
-    		message : 'Brave enough! You have been elektrofied.. Score = ' + score
+    	// flash the screen when elektrocuting
+        $("body").animate({ backgroundColor: "white" }, "fast");
+        
+    	socket.emit("game-stopped", {
+    		score : score
     	});
-    	// show tiled pic...
-    	socket.on("tiledpic", function(data) {
-		    var img = $("body").attr("style", data.url);		
-		    $('body').css("background-image", "url("  + data.url + ")");  
+    	
+    	// TODO hide/show div with canvas...
+    	socket.on("pic-tweeted", function(data) {
+		    var image = new Image();
+		    image.addEventListener('load', function() {
+	    	  var width = image.naturalWidth; // this will be 300
+	    	  var height = image.naturalHeight; // this will be 400
+ 			  $("canvas").getContext("2d").drawImage(image, 0, 0, width, height);
+		}, false);
+		    //$('body').css("background-image", "url("  + data.url + ")");  
     	});
+    	
     	world.publish({
-    		topic: 'lose-game'
+    		topic: 'game-stopped'
     	});
     	
     });
@@ -222,15 +219,38 @@ require(
 	        c = data.collisions[ i ];
 	        if (hasCollided(data)) {
 	        	boundaryHit = false;
+	        	inGame = false;
+	        	// flash the screen when elektrocuting
+	            $("body").animate({ backgroundColor: "white" }, "fast");
+	            
+	        	socket.emit("game-stopped", {
+	        		score : score
+	        	});
+	        	
+	        	// TODO hide/show div with canvas...
+	        	socket.on("pic-tweeted", function(data) {
+	    		    var image = new Image();
+	    		    image.addEventListener('load', function() {
+	    	    	  var width = image.naturalWidth; // this will be 300
+	    	    	  var height = image.naturalHeight; // this will be 400
+	     			  $("canvas").getContext("2d").drawImage(image, 0, 0, width, height);
+	    		}, false);
+	    		    //$('body').css("background-image", "url("  + data.url + ")");  
+	        	});
+	        	
 	        	world.publish({
+	        		topic: 'game-stopped'
+	        	});
+	        	/*world.publish({
 	        		topic: 'collision-pair',
 	        		bodyA: c.bodyA,
 	        		bodyB: c.bodyB
-	        	});
+	        	});*/
 	        }
 	    }
 	    boundaryHit && inGame && bounces++ && drawScore();
     });
+    
   };
   
   var handleInput = function(event, key) {
@@ -259,7 +279,7 @@ require(
 		  document.body.className = 'in-game';
 	      inGame = true;
 	      newGame();
-	      socket.emit("grab", {
+	      socket.emit("game-started", {
 	    	  frequency : 1
 	      });
 	  }
