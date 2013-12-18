@@ -172,12 +172,10 @@ require(
     	
     	// TODO hide/show div with canvas...
     	socket.on("pic-tweeted", function(data) {
-		    var image = new Image();
-		    image.addEventListener('load', function() {
-	    	  var width = image.naturalWidth; // this will be 300
-	    	  var height = image.naturalHeight; // this will be 400
- 			  $("canvas").getContext("2d").drawImage(image, 0, 0, width, height);
-		}, false);
+		    $("#tile").attr("src", data.url).load(function() {
+		    	
+		    	$("#game-over").show();
+		    });
 		    //$('body').css("background-image", "url("  + data.url + ")");  
     	});
     	
@@ -303,6 +301,3 @@ require(
     }
   }).start();
 });
-
-
- 

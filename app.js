@@ -116,6 +116,8 @@ exports.app = (function() {
 			// name and email?
 			serialConnector.stopGame();
 			frameGrabber.stopGrabbing();
+			var twitpic = tweetPic(socket);
+			twitpic(data);
 		});
 		socket.on('tweet', tweetPic(socket));
 		socket.on('options', parseOptions(socket));
