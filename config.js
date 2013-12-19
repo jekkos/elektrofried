@@ -7,7 +7,7 @@ config.DEFAULT_PORT = 8080;
 // twitter settings
 config.DEFAULT_PLACE_ID = '@appsaloon';
 config.DEFAULT_TITLE = 'Elektrofried!';
-config.DEFAULT_MESSAGE = '@$name was Elektrofied at #urbancrafts $score';
+config.DEFAULT_MESSAGE = '@{1} was Elektrofied with {0}';
 config.USE_PROXY = false;
 
 config.BOUNDARY = '---------------------------10102754414578508781458777923';

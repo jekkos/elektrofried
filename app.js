@@ -1,4 +1,5 @@
 var config = require('./config');
+require('./common');
 var server = require('http').Server(), io = require('socket.io').listen(config.DEFAULT_PORT);
 var logger = require('winston');
 var twitterer = require('./twitterer').twitterer;
@@ -7,16 +8,6 @@ var tileBuilder = require('./tilebuilder').tileBuilder;
 var serialConnector = require('./serialconnector').serialConnector;
 var frameGrabber = require('./framegrabber').frameGrabber;
 var frame = require('./framegrabber').frame;
-
-Object.spawn = function (parent, props) {
-	var defs = {}, key;
-	for (key in props) {
-		if (props.hasOwnProperty(key)) {
-			defs[key] = {value: props[key], enumerable: true};
-		}
-	}
-	return Object.create(parent, defs);
-};
 
 exports.app = (function() {
 	
@@ -44,32 +35,19 @@ exports.app = (function() {
 	var lastFileName;
 	var lastTweet;
 	
-	var tweet = Object.spawn(frame, {
-		getMessage : function() {
-			if (!this.message) {
-				this.message = config.DEFAULT_MESSAGE;
-			}
-			this.message = this.message.replace(/\$score/g, this.score);
-			this.message = this.message.replace(/\$name/g, this.name);
-			return this.message.replace(/\$email/g, this.email);
-		},
-		getTitle : function() {
-			return this.title || config.DEFAULT_TITLE;
-		},
-		getPlaceId : function() {
-			return this.placeId || config.DEFAULT_PLACE_ID;
-		}
-	});
-	
 	var tweetPic = function(socket) {
 		return function(data) {
 			if (!lastFileName) {
 				lastFileName = buildTile(socket);
 			}
-			lastTweet = Object.spawn(tweet, {message : data.message, score: score, 
-				name: data.name, email : data.email,
+			lastTweet = Object.spawn(twitterer.tweet, {
+				message : data.message || config.DEFAULT_MESSAGE, 
+				score: score, 
+				name: data.name, 
+				email : data.email,
 				placeId : data.placeId || options.placeId, 
 				fileName : lastFileName});
+			logger.info("Tweet object created " + JSON.stringify(lastTweet)); 
 			twitterer.tweet(lastTweet);
 		};
 	};
@@ -101,12 +79,17 @@ exports.app = (function() {
 	
 	frameGrabber.init(dimensions, function(frame) {
 		for (var i = 0; i < sockets.length; i++) {
-			sockets[i].emit("frame", frame.getUrl());
+			sockets[i].emit("frame-grabbed", frame.getUrl());
 		}
 	});
 	
 	logger.info("Initializing serial connector " + JSON.stringify(serialConnector));
-	serialConnector.init();
+	serialConnector.init(function(status) {
+		logger.debug("sending input-received");
+		for(index in sockets) {
+			sockets[index].emit("input-received", status);
+		}
+	});
 	
 	io.on('connection', function(socket) {
 		sockets.push(socket);
@@ -120,13 +103,16 @@ exports.app = (function() {
 			serialConnector.shock();
 		});
 		socket.on('game-started', function(data) {
+			logger.info("starting game");
 			// parse options from data
 			parseOptions(socket);
 			score = 0;
 			serialConnector.startGame();
 			frameGrabber.startGrabbing(options);
+			// could solve this better with 'rooms'?
 		});
 		socket.on('game-stopped', function(data) {
+			logger.info("stopping game");
 			// feedback to teensy
 			score = data.score;
 			// name and email?
@@ -137,6 +123,7 @@ exports.app = (function() {
 		});
 		socket.on('tweet', tweetPic(socket));
 		socket.on('options', parseOptions(socket));
+		socket.emit('options', options);
 	});
 	
 	

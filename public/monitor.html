@@ -61,7 +61,7 @@
 					  }); 
 				   });
 			   });
-			   socket.on("frame", function(file) {
+			   socket.on("frame-grabbed", function(file) {
 			   	   var img = $("#webcam").attr("src", file);			   		
 			   });
 			   socket.on("options", function(options) {
@@ -74,7 +74,6 @@
 			   });
 			   
 			   $(document).ready(function() {
-					socket.emit("options");
 					$("input[type='text']").change(function() {
 						if (this.name.startsWith("dimensions")) {
 							var id = $(this).attr('id');

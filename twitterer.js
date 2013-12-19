@@ -1,9 +1,24 @@
 var config = require('./config');
+require('./common');
+var frame = require('./framegrabber').frame;
 var OAuthEcho = require('oauth').OAuthEcho;
 var OAuth = require('oauth').OAuth;
 var fs = require('fs');
 var logger = require('winston');
 var http = require('http');
+
+var tweet = Object.spawn(frame, {
+	getMessage : function() {
+		logger.info("Got score " + this.score + " name " + this.name + " message " + this.message);
+		return this.message.format(this.score, this.name, this.email);
+	},
+	getTitle : function() {
+		return this.title || config.DEFAULT_TITLE;
+	},
+	getPlaceId : function() {
+		return this.placeId || config.DEFAULT_PLACE_ID;
+	}
+});
 
 var twitterer = (function() {
 	
@@ -149,3 +164,4 @@ var twitterer = (function() {
 })();
 
 exports.twitterer = twitterer;
+exports.tweet = tweet;

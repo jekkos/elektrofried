@@ -42,11 +42,6 @@ body.before-game:after {
 body.lose-game:after {
 	content: 'Game Over! You have been Elektrofied!';
 }
-/* spaceship from: http://millionthvector.blogspot.ca/p/free-sprites.html */
-/* starfield from: http://gamedevtuts.s3.amazonaws.com/043_freeShmupSprites/Free_Shmup_Sprites_Starfield.png */
-canvas {
-	background: url(img/starfield.png) 0 0 repeat;
-}
 
 h3#title {
 	font-size: 32px;
@@ -74,7 +69,7 @@ h3#title {
 		<div class="bar bar-success" style="height: 70%; width: 100%"></div>
 		<div class="bar bar-warning" style="height: 20%; width: 100%"></div>
 		<div class="bar bar-danger" style="height: 10%; width: 100%"></div>
-	</div>
+	</div><
 
 	<div class="container" id="tiled-image-overlay">
 		<div class="row clearfix">
@@ -88,15 +83,21 @@ h3#title {
 			<div class="col-md-4 column">
 				<form class="form-horizontal" role="form">
 					<div class="form-group">
-						<label for="inputEmail3" class="col-sm-2 control-label">Name</label>
+						<label for="name-input" class="col-sm-2 control-label">Name</label>
 						<div class="col-sm-10">
 							<input class="form-control" id="name-input" type="text" />
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="inputPassword3" class="col-sm-2 control-label">Email</label>
+						<label for="email-input" class="col-sm-2 control-label">Email</label>
 						<div class="col-sm-10">
 							<input class="form-control" id="email-input" type="email" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="tweet-input" class="col-sm-2 control-label">Tweet</label>
+						<div class="col-sm-10">
+							<input class="form-control" id="tweet-input" type="text" />
 						</div>
 					</div>
 					<div class="form-group">

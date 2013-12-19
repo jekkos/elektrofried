@@ -1,12 +1,39 @@
 define(function() {
     var pressedKeys = {};
     var shiftDown = false;
+    var oldStatus;
 
     function setKey(event, status) {
     	var key = getKeyCode(event);
     	pressedKeys[key] = status;
     	shiftDown = event.shiftKey;
     }
+    
+    var statusDiff = function(newStatus) {
+    	var result = {
+    		oldStatus : oldStatus,
+			leftChanged :  function() {
+				return this.oldStatus.links !== newStatus.links;
+			},
+			rightChanged : function() {
+				return this.oldStatus.rechts !== newStatus.rechts;
+			},
+			leftDown : function() {
+				return newStatus.links === "1";
+			},
+			rightDown : function() {
+				return newStatus.rechts === "1";
+			},
+			bothDown : function() {
+				return this.leftDown() && this.rightDown();
+			},
+			bothUp : function() {
+				return !this.leftDown() && !this.rightDown();
+			}
+		};
+    	oldStatus = newStatus;
+    	return result;
+	};
     
     var getKeyCode = function getKeyCode(event) {
         var code = event.keyCode;
@@ -52,6 +79,7 @@ define(function() {
         isShiftDown : function() {
         	return shiftDown;
         },
-        getKeyCode : getKeyCode
+        getKeyCode : getKeyCode,
+        statusDiff : statusDiff
     };
 });

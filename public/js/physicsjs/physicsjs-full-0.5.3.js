@@ -3154,13 +3154,15 @@ Physics.geometry.nearestPointOnLine = function nearestPointOnLine( pt, linePt1, 
                 ,notify
                 ;
 
-            if (body){
+            if (body){ 
                 
                 for ( var i = 0, l = bodies.length; i < l; ++i ){
                     
                     if (body === bodies[ i ]){
                         
                         bodies.splice( i, 1 );
+                        delete body._world; 
+                        console.log("removing");
                         break;
                     }
                 }
