@@ -3,22 +3,14 @@ html, body {
     padding: 0;
 }
 
-.bird {
-	background: url('imgs/bird_sheet.png') no-repeat -520px -115px;
-	width: 45px;
-	height: 44px;
-}
-
-.bird1 {
-	background: url('imgs/bird_sheet.png') no-repeat -521px -303px;
-	width: 45px;
-	height: 43px;
-}
-
-.bird2 {
-	background: url('imgs/bird_sheet.png') no-repeat -521px -209px;
-	width: 45px;
-	height: 44px;
+#progressbar {
+	position: absolute;
+	width: 50%;
+	height: 20px;
+	top: 50px;
+	right: 0;
+	left: 0;
+	margin: auto;
 }
 
 canvas {
@@ -31,18 +23,6 @@ canvas {
     left: 0;
     right: 0;
     border: 2px solid white;
-}
-
-.progress.vertical {
-    position: absolute;
-    width: 20px;
-    min-height: 400px;
-    margin: auto;
-    left: 100px;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-    border: none;
 }
 
 .wrapper {
@@ -74,22 +54,6 @@ canvas {
 
 .key {
     color: #aaffdd;
-}
-
-#game-over, #game-over-overlay {
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    display: none;
-}
-
-#game-over-overlay {
-    background-color: black;
-    opacity: .5;
 }
 
 #game-over {
@@ -129,6 +93,11 @@ canvas {
     height: 90%;
     text-align: center;
     border-radius:30px;
+}
+
+#game-start-overlay .col-md-6.column {
+	margin: 0 20px;
+	width: 45%;
 }
 
 #active-item {

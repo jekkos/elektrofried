@@ -19,33 +19,9 @@ html,body {
 	background-color: #151515;
 }
 
-body:after {
-	font-size: 30px;
-	line-height: 140px;
-	text-align: center;
-	color: rgb(60, 16, 11);
-	background: rgba(255, 255, 255, 0.6);
-	position: absolute;
-	top: 50%;
-	left: 40%;
-	width: 700px;
-	height: 140px;
-	margin-left: -200px;
-	margin-top: -70px;
-	border-radius: 5px;
-}
-
-body.before-game:after {
-	content: 'Druk beide controllers in om te beginnen.';
-}
-
-body.lose-game:after {
-	content: 'Game Over! You have been Elektrofied!';
-}
-
 h3#title {
 	font-size: 32px;
-	text-color: white;
+	color: white;
 	font-weight: bold;
 }
 
@@ -57,7 +33,6 @@ h3#title {
 	top: 20px;
 }
 
-
 </style>
 </head>
 <body>
@@ -65,16 +40,10 @@ h3#title {
 
 	<div class="wrapper"></div>
 
-<!-- 	<div class="progress vertical">
-	  <div class="bar bar-success" style="width: 70%;"></div>
-	  <div class="bar bar-warning" style="width: 20%;"></div>
-	  <div class="bar bar-danger" style="width: 10%;"></div>
-	</div> -->
-
 	<div class="container" id="tiled-image-overlay">
 		<div class="row clearfix">
 			<div class="col-md-12 column">
-				<h3 id="title" class="text-center">You have been elektrofried!</h3>
+				<h3 id="title" class="text-center">You have lost control! Score: {0}</h3>
 				<div id="active-item"></div> 
 			</div>
 		</div>
@@ -124,7 +93,7 @@ h3#title {
 					<p>Zorg dat je minstens 1 knop ingedrukt houdt. Als je een knop
 						loslaat zal zijn controle veld afnemen. Zorg dat je nooit onder
 						nul komt en dat de lightning bolt je nooit raakt.</p>
-					<div style="text-align: center; margin-top: 20px;">
+					<div style="text-align: center;">
 						<img src="img/shockbox.png" alt="shockbox" width="340">
 					</div>
 				</div>
@@ -148,6 +117,19 @@ h3#title {
 			</div>
 		</div>
 	</div>
+
+	<div id="display">
+		<canvas id="viewport"></canvas>
+	</div>
+	
+		<div id="progressbar">
+			<div class="progress progress-striped">
+				<div class="progress-bar progress-bar-danger" role="progressbar"
+					aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: 80%">
+					<span class="sr-only">80% Complete (danger)</span>
+				</div>
+			</div>
+		</div>
 
 	<script type="text/javascript" data-main="js/game.js"
 		src="js/require.js"></script>

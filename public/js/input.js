@@ -24,6 +24,12 @@ define(function() {
 			rightDown : function() {
 				return newStatus.rechts === "1";
 			},
+			leftUp : function() {
+				return newStatus.links === "0";
+			},
+			rightUp : function() {
+				return newStatus.rechts === "0";
+			},
 			bothDown : function() {
 				return this.leftDown() && this.rightDown();
 			},

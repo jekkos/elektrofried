@@ -17,7 +17,7 @@ require({
 		'physicsjs/behaviors/sweep-prune',
 		'physicsjs/behaviors/body-collision-detection',
 		'physicsjs/behaviors/body-impulse-response',
-		'physicsjs/behaviors/edge-collision-detection',
+		'physicsjs/behaviors/edge-collision-detection'
 // 'bootstrap'
 ], function(require, input, $, socketio, Physics) {
 	document.body.className = 'before-game';
@@ -28,7 +28,9 @@ require({
 	var socket = io.connect('http://localhost:8080');
 	var width = 800;
 	var height = 400;
-
+	
+	var millisBeforeShock = 3000;
+	
 	var score = 0;
 	var timeStarted = 0;
 	var bounces = 0;
@@ -36,6 +38,20 @@ require({
 	var ball;
 
 	var collisionBehavior;
+	
+	var firstReleased = 0;
+	
+	if (!String.prototype.format) {
+		String.prototype.format = function() {
+			var args = arguments;
+			return this.replace(/{(\d+)}/g, function(match, number) { 
+				return typeof args[number] != 'undefined'
+					? args[number]
+				: match
+				;
+			});
+		};
+	}
 
 	var renderer = Physics.renderer('canvas', {
 		el : 'viewport',
@@ -77,7 +93,7 @@ require({
 			vx : 0.1,
 			vy : -0.1,
 			radius : 15,
-			restitution : 1,
+			restitution : 1.03,
 			cof : 0
 		});
 
@@ -108,8 +124,9 @@ require({
 
 	function drawScore() {
 		if (inGame) {
-			var secondsPlaying = Math.abs(new Date().getSeconds() - timeStarted);
-			score = secondsPlaying * 100 + bounces * 20;
+			var secondsPlaying = Math
+					.abs(new Date().getTime() - timeStarted);
+			score = secondsPlaying / 10 + bounces * 20;
 			$("#floating-score").text("Score: " + score);
 			console.log("new score found " + score);
 		}
@@ -152,19 +169,21 @@ require({
 				$("#tiled-image-overlay").show(1000);
 			}
 		});
+		
+		var title = $("#title").text();
+		$("#title").text(title.format(score));
 
 		socket.emit("game-stopped", {
 			score : score
 		});
 
-		document.body.className = 'lose-game';
 	};
 
-	var startGame = function newGame() {
+	var startGame = function() {
 		inGame = true;
 		score = 0;
 		bounces = 0;
-		timeStarted = new Date().getSeconds();
+		timeStarted = new Date().getTime();
 
 		world && world.destroy();
 		if ($("#floating-score").length === 0) {
@@ -268,11 +287,35 @@ require({
 					addOrRemoveBody(world.removeBody, controller2);
 				}
 			}
+			if (diff.rightUp() || diff.leftUp()) {
+				if (firstReleased === 0) {
+					firstReleased = new Date().getTime();
+				} 
+			} else {
+				firstReleased = 0;
+			}
 		} else if (diff.bothDown() && gameEnabled) {
 			console.log("game started");
 			document.body.className = 'in-game';
 			$("#game-start-overlay").hide(100);
 			startGame();
+		}
+	};
+	
+	var checkTimeReleased = function() {
+		if (firstReleased > 0) {
+			var timeReleased = new Date().getTime() - firstReleased;
+			console.log("controller released for " + timeReleased);
+			var percentageLeft = Math.round((millisBeforeShock - timeReleased) / (millisBeforeShock) * 100);
+			console.log("percentage left before shock " + percentageLeft);
+			if (timeReleased > millisBeforeShock) {
+				// end game...
+				socket.emit('shock');
+				stopGame();
+			}
+			$(".progress-bar").css('width', percentageLeft + "%");
+		} else {
+			$(".progress-bar").css('width', "100%");
 		}
 	};
 
@@ -290,6 +333,7 @@ require({
 	Physics.util.ticker.subscribe(function(time) {
 		if (world && inGame) {
 			world.step(time);
+			checkTimeReleased();
 		}
 	}).start();
 });
