@@ -7,6 +7,7 @@
 <meta name="description" content="">
 <meta name="viewport" content="width=device-width">
 
+<link rel="stylesheet" href="js/bower/bootstrap/dist/css/bootstrap.css">
 <link rel="stylesheet" href="css/app.css">
 <style type="text/css">
 html,body {
@@ -15,6 +16,7 @@ html,body {
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
+	background-color: #151515;
 }
 
 body:after {
@@ -34,7 +36,7 @@ body:after {
 }
 
 body.before-game:after {
-	content: 'Druk beide controller in om te beginnen';
+	content: 'Druk beide controllers in om te beginnen.';
 }
 
 body.lose-game:after {
@@ -42,9 +44,25 @@ body.lose-game:after {
 }
 /* spaceship from: http://millionthvector.blogspot.ca/p/free-sprites.html */
 /* starfield from: http://gamedevtuts.s3.amazonaws.com/043_freeShmupSprites/Free_Shmup_Sprites_Starfield.png */
-body {
+canvas {
 	background: url(img/starfield.png) 0 0 repeat;
 }
+
+h3#title {
+	font-size: 32px;
+	text-color: white;
+	font-weight: bold;
+}
+
+#controller1 {
+	top: 20px;
+}
+
+#controller2 {
+	top: 20px;
+}
+
+
 </style>
 </head>
 <body>
@@ -52,32 +70,17 @@ body {
 
 	<div class="wrapper"></div>
 
-	<div class="container" id="game-over" style="display:none; visibility:hidden;">
+	<div class="progress vertical">
+		<div class="bar bar-success" style="height: 70%; width: 100%"></div>
+		<div class="bar bar-warning" style="height: 20%; width: 100%"></div>
+		<div class="bar bar-danger" style="height: 10%; width: 100%"></div>
+	</div>
+
+	<div class="container" id="tiled-image-overlay">
 		<div class="row clearfix">
 			<div class="col-md-12 column">
-				<h3 id="title" class="text-center">h3. Lorem ipsum dolor sit amet.</h3>
-				<div class="carousel slide" id="carousel-151376">
-					<ol class="carousel-indicators">
-						<li class="active" data-slide-to="0"
-							data-target="#carousel-151376"></li>
-						<li data-slide-to="1" data-target="#carousel-151376"></li>
-						<li data-slide-to="2" data-target="#carousel-151376"></li>
-					</ol>
-					<div class="carousel-inner">
-						<div class="item active">
-							<img alt="" id="tile" src="http://lorempixel.com/1600/500/sports/1" />
-							<!-- <div class="carousel-caption">
-							
-							</div> -->
-						</div>
-					</div>
-					<a class="left carousel-control" href="#carousel-151376"
-						data-slide="prev"> <span
-						class="glyphicon glyphicon-chevron-left"></span></a> <a
-						class="right carousel-control" href="#carousel-151376"
-						data-slide="next"><span
-						class="glyphicon glyphicon-chevron-right"></span></a>
-				</div>
+				<h3 id="title" class="text-center">You have been elektrofried!</h3>
+				<div id="active-item"></div> 
 			</div>
 		</div>
 		<div class="row clearfix">
@@ -87,18 +90,18 @@ body {
 					<div class="form-group">
 						<label for="inputEmail3" class="col-sm-2 control-label">Name</label>
 						<div class="col-sm-10">
-							<input class="form-control" id="name" type="text" />
+							<input class="form-control" id="name-input" type="text" />
 						</div>
 					</div>
 					<div class="form-group">
 						<label for="inputPassword3" class="col-sm-2 control-label">Email</label>
 						<div class="col-sm-10">
-							<input class="form-control" id="email" type="email" />
+							<input class="form-control" id="email-input" type="email" />
 						</div>
 					</div>
 					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10">
-							<button type="submit" class="btn btn-default">Submit</button>
+							<button type="submit" class="btn btn-default" id="submit-tweet">Tweet!</button>
 						</div>
 					</div>
 				</form>

@@ -80,10 +80,5 @@ var frameGrabber = (function() {
 	};
 })();
 
+exports.frameGrabber = frameGrabber;
 exports.frame = frame;
-exports.startGrabbing = frameGrabber.startGrabbing;
-exports.stopGrabbing = frameGrabber.stopGrabbing;
-exports.getLastFrame = frameGrabber.getLastFrame;
-exports.getFrames = frameGrabber.getFrames;
-exports.init = frameGrabber.init;
-

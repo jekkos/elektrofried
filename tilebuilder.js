@@ -1,7 +1,7 @@
 var gm = require('gm');
 var logger = require('winston');
 
-exports.build = (function() {
+var tileBuilder = (function() {
 	
 	var calcCoordinates = function(dimensions) {
 		var result = [];
@@ -14,23 +14,27 @@ exports.build = (function() {
 		return result;
 	};
 	
-	return function(filePath, frames, dimensions, callback) {
-		
-		var coordinates = calcCoordinates(dimensions);
-		logger.info(JSON.stringify(coordinates) + " writing to " + filePath);
-		var tiledImage = gm();
-		var tileSize = dimensions.x * dimensions.y;
-		if (frames.length >= tileSize ) {
-			frames = frames.slice(frames.length - tileSize);
+	return {
+		build : function(filePath, frames, dimensions, callback) {
+			var coordinates = calcCoordinates(dimensions);
+			logger.info(JSON.stringify(coordinates) + " writing to " + filePath);
+			var tiledImage = gm();
+			var tileSize = dimensions.x * dimensions.y;
+			if (frames.length >= tileSize ) {
+				frames = frames.slice(frames.length - tileSize);
+			}
+			for (var i = 0; i < frames.length; i++) {
+				var frame = frames[i];
+				var coordinate = coordinates[i];
+				tiledImage.in('-page', coordinate).in(frame.getPath());
+			}
+			tiledImage.minify()  // Halves the size, 512x512 -> 256x256
+			.mosaic()  // Merges the images as a matrix
+			.write(filePath, callback);
 		}
-		for (var i = 0; i < frames.length; i++) {
-			var frame = frames[i];
-			var coordinate = coordinates[i];
-			tiledImage.in('-page', coordinate).in(frame.getPath());
-		}
-		tiledImage.minify()  // Halves the size, 512x512 -> 256x256
-		.mosaic()  // Merges the images as a matrix
-		.write(filePath, callback);
 	};
+
 	
 })();
+
+exports.tileBuilder = tileBuilder;

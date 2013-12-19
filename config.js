@@ -7,7 +7,7 @@ config.DEFAULT_PORT = 8080;
 // twitter settings
 config.DEFAULT_PLACE_ID = '@appsaloon';
 config.DEFAULT_TITLE = 'Elektrofried!';
-config.DEFAULT_MESSAGE = 'Test twitpic upload';
+config.DEFAULT_MESSAGE = '@$name was Elektrofied at #urbancrafts $score';
 config.USE_PROXY = false;
 
 config.BOUNDARY = '---------------------------10102754414578508781458777923';
@@ -21,20 +21,23 @@ config.consumerSecret = 'SLlTcBtUeqzvoqXxTNzAkXylkuTYAR7oSvromKi9c';
 config.apiKey = '2b8b27c20a414b31bbbd94bb06e714fc';
 
 // serial interfacing
-config.TTY_NAME = "/dev/ttyUSB0";
+config.TTY_NAME = "/dev/ttyACM0";
 config.BAUD_RATE = 9600;
 config.SERIAL_SEPARATOR = "\n";
 
 // teensy commandes
 config.DEMO_MODE = "d";
-// would expect this to be an l (as documented)
-config.LIGHT_MODE = "b";
+config.LIGHT_MODE = "l";
 config.ENABLE_SHOCK = "s";
 config.DISABLE_SHOCK = "e";
 config.SHOCK = "x";
 
 // framegrabber settings
 config.JPEG_QUALITY = 95;
+
+// tilebuilder settings
+config.TILE_WIDTH = 4;
+config.TILE_HEIGHT = 1;
 
 // filesystem settings
 config.FILE_ROOT = '/home/jekkos/workspace/elektrofried/';

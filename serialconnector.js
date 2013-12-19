@@ -1,5 +1,6 @@
 var config = require('./config');
-var SerialPort = require("serialport").SerialPort;
+var SerialPort = require('serialport').SerialPort;
+var serialport = require('serialport');
 var logger = require('winston');
 
 // singleton object!
@@ -27,13 +28,13 @@ var serialConnector = (function() {
 	};
 	
 	var shock = function(data) {
-		// electroshock
 		isGameStarted() && serialWrite(config.SHOCK);
 	};
 	
 	var shockIfReleased = function(status) {
 		if (isGameStarted()) {
-			if (!status.links && !status.rechts) {
+			if (status.links === "0" && status.rechts === "0") {
+				logger.warn("controllers " + JSON.stringify(status) + ", emitting shock!");
 				serialWrite(config.SHOCK);
 			}
 		}
@@ -42,12 +43,12 @@ var serialConnector = (function() {
 	var init = function(statusCallback) {
 		
 		serialPort = new SerialPort(config.TTY_NAME, {
+			  parser: serialport.parsers.readline("\r\n"),
 			  baudrate: config.BAUD_RATE
 		});
 		
 		serialPort.on("open", function () {
-			logger.info('serialport opened');
-			
+			logger.info('serialport ' +  config.TTY_NAME +  ' opened at ' + config.BAUD_RATE + " bauds");
 			var parseStatus = function(data) {
 				return {
 					links : data.charAt(0),
@@ -60,11 +61,12 @@ var serialConnector = (function() {
 			serialPort.on('data', function(data) {
 				// parse data into object..
 				var status = parseStatus(data);
+				logger.info('status data received: ' + JSON.stringify(status));
 				statusCallback && statusCallback.call(this, status);
-				logger.info('serial data received: ' + data);
+				shockIfReleased(status);
 			});
 			// goto demo mode to show we're ready
-			serialWrite(DEMO_MODE);
+			serialWrite(config.DEMO_MODE);
 			serialOpened = true;
 		});
 	};
@@ -95,7 +97,4 @@ var serialConnector = (function() {
 })();
 
 // register status callback here
-module.exports.init = serialConnector.init;
-exports.shock = serialConnector.shock;
-exports.stopGame = serialConnector.stopGame;
-exports.startGame = serialConnector.startGame;
+exports.serialConnector = serialConnector;

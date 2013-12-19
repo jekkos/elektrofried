@@ -1,11 +1,12 @@
 var config = require('./config');
 var server = require('http').Server(), io = require('socket.io').listen(config.DEFAULT_PORT);
 var logger = require('winston');
-var twitterer = require('./twitterer');
+var twitterer = require('./twitterer').twitterer;
 var gifBuilder = require('./gifbuilder');
-var tileBuilder = require('./tilebuilder');
-var serialConnector = require('./serialconnector');
-var frameGrabber = require('./framegrabber');
+var tileBuilder = require('./tilebuilder').tileBuilder;
+var serialConnector = require('./serialconnector').serialConnector;
+var frameGrabber = require('./framegrabber').frameGrabber;
+var frame = require('./framegrabber').frame;
 
 Object.spawn = function (parent, props) {
 	var defs = {}, key;
@@ -20,8 +21,8 @@ Object.spawn = function (parent, props) {
 exports.app = (function() {
 	
 	var dimensions = {
-	    x : 2,
-	    y : 2,
+	    x : config.TILE_WIDTH,
+	    y : config.TILE_HEIGHT,
 		width : 640,
 		height : 480,
 		toString : function() {
@@ -40,10 +41,17 @@ exports.app = (function() {
 	var sockets = [];
 	var tweets = [];
 	var score;
+	var lastFileName;
+	var lastTweet;
 	
-	var tweet = Object.spawn(frameGrabber.frame, {
+	var tweet = Object.spawn(frame, {
 		getMessage : function() {
-			return this.message.replace(/\$score/g, this.score) || config.DEFAULT_MESSAGE;
+			if (!this.message) {
+				this.message = config.DEFAULT_MESSAGE;
+			}
+			this.message = this.message.replace(/\$score/g, this.score);
+			this.message = this.message.replace(/\$name/g, this.name);
+			return this.message.replace(/\$email/g, this.email);
 		},
 		getTitle : function() {
 			return this.title || config.DEFAULT_TITLE;
@@ -55,22 +63,29 @@ exports.app = (function() {
 	
 	var tweetPic = function(socket) {
 		return function(data) {
-			var fileName = config.TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
-			logger.info("About to upload " + fileName + " to twitter");
-			tileBuilder.build(fileName, frameGrabber.getFrames(), options.dimensions, function (err) {
-				if (err) {
-					logger.error(err);
-				} else {
-					currentTweet = Object.spawn(tweet, {message : data.message, score: score,
-						placeId : data.placeId || options.placeId, 
-						fileName : fileName});
-					twitterer.upload(currentTweet);
-					socket.emit("pic-tweeted", {
-						url : currentTweet.getUrl()
-					});
-				}
-			});
+			if (!lastFileName) {
+				lastFileName = buildTile(socket);
+			}
+			lastTweet = Object.spawn(tweet, {message : data.message, score: score, 
+				name: data.name, email : data.email,
+				placeId : data.placeId || options.placeId, 
+				fileName : lastFileName});
+			twitterer.tweet(lastTweet);
 		};
+	};
+	
+	var buildTile = function(socket) {
+		var fileName = config.TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
+		tileBuilder.build(fileName, frameGrabber.getFrames(), options.dimensions, function (err) {
+			if (err) {
+				logger.error(err);
+			} else {
+				socket.emit('tile-built', {
+					url : config.SERVER_URL + fileName
+				});	
+			}
+		});
+		return fileName;
 	};
 	
 	var parseOptions = function(socket) {
@@ -89,6 +104,7 @@ exports.app = (function() {
 			sockets[i].emit("frame", frame.getUrl());
 		}
 	});
+	
 	logger.info("Initializing serial connector " + JSON.stringify(serialConnector));
 	serialConnector.init();
 	
@@ -116,8 +132,8 @@ exports.app = (function() {
 			// name and email?
 			serialConnector.stopGame();
 			frameGrabber.stopGrabbing();
-			var twitpic = tweetPic(socket);
-			twitpic(data);
+			// create tile and send back!
+			lastFileName = buildTile(socket);
 		});
 		socket.on('tweet', tweetPic(socket));
 		socket.on('options', parseOptions(socket));

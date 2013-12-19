@@ -5,8 +5,7 @@ var fs = require('fs');
 var logger = require('winston');
 var http = require('http');
 
-
-exports.upload = (function() {
+var twitterer = (function() {
 	
 	var crlf = "\r\n";
 	
@@ -143,6 +142,10 @@ exports.upload = (function() {
 		
 	};
 	
-	return tweet;
+	return {
+		tweet : tweet
+	};
 	
 })();
+
+exports.twitterer = twitterer;
