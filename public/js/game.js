@@ -170,8 +170,7 @@ require({
 			}
 		});
 		
-		var title = $("#title").text();
-		$("#title").text(title.format(score));
+		$("#title").text("You have  lost control! Score: " + score);
 
 		socket.emit("game-stopped", {
 			score : score
@@ -305,13 +304,18 @@ require({
 	var checkTimeReleased = function() {
 		if (firstReleased > 0) {
 			var timeReleased = new Date().getTime() - firstReleased;
-			console.log("controller released for " + timeReleased);
 			var percentageLeft = Math.round((millisBeforeShock - timeReleased) / (millisBeforeShock) * 100);
-			console.log("percentage left before shock " + percentageLeft);
 			if (timeReleased > millisBeforeShock) {
 				// end game...
 				socket.emit('shock');
 				stopGame();
+			}
+			if (percentageLeft > 60) {
+				$(".progress-bar").addClass("progress-bar-success").removeClass("progress-bar-warning progress-bar-danger");
+			} else if (percentageLeft > 40) {
+				$(".progress-bar").addClass("progress-bar-warning").removeClass("progress-bar-success progress-bar-danger");
+			} else {
+				$(".progress-bar").addClass("progress-bar-danger").removeClass("progress-bar-warning progress-bar-success");
 			}
 			$(".progress-bar").css('width', percentageLeft + "%");
 		} else {
