@@ -13,8 +13,7 @@ require({
 	}
 }, [ 'require', 'input', 'jquery', 'socketio',
 // official modules
-     	'physicsjs/renderers/canvas', 
-		'physicsjs/bodies/circle',
+'physicsjs/renderers/canvas', 'physicsjs/bodies/circle',
 		'physicsjs/behaviors/sweep-prune',
 		'physicsjs/behaviors/body-collision-detection',
 		'physicsjs/behaviors/body-impulse-response',
@@ -35,9 +34,9 @@ require({
 	var bounces = 0;
 
 	var ball;
-	
+
 	var collisionBehavior;
-	
+
 	var renderer = Physics.renderer('canvas', {
 		el : 'viewport',
 		width : width,
@@ -109,13 +108,13 @@ require({
 
 	function drawScore() {
 		if (inGame) {
-			var secondsPlaying = new Date().getSeconds() - timeStarted;
+			var secondsPlaying = Math.abs(new Date().getSeconds() - timeStarted);
 			score = secondsPlaying * 100 + bounces * 20;
 			$("#floating-score").text("Score: " + score);
 			console.log("new score found " + score);
 		}
 	}
-	
+
 	// setup communication
 	$("#submit-tweet").click(function() {
 		socket.emit("tweet", {
@@ -123,15 +122,18 @@ require({
 			email : $("#email-input").val(),
 			message : $("#tweet-input").val()
 		});
-		$("#tiled-image-overlay").hide(1000);
+		$("#tiled-image-overlay").hide(1000, function() {
+			$("#game-start-overlay").show(500);
+			gameEnabled = true;
+		});
 		return false;
 	});
-	
+
 	socket.on('input-received', function(status) {
 		console.log(" ipnut received " + JSON.stringify(status));
 		handleInput(status);
 	});
-	
+
 	socket.on("options", function(options) {
 		console.log("options received " + JSON.stringify(options));
 		$("#tweet-input").val(options.message);
@@ -148,7 +150,6 @@ require({
 				});
 				$("#active-item").empty().append(img);
 				$("#tiled-image-overlay").show(1000);
-				gameEnabled = true;
 			}
 		});
 
@@ -192,7 +193,7 @@ require({
 		 * 
 		 * });
 		 */
-		
+
 		socket.emit("game-started", {
 			frequency : 1
 		});
@@ -240,13 +241,13 @@ require({
 		});
 
 	};
-	
+
 	var addOrRemoveBody = function(func, controller) {
 		world.removeBehavior(collisionBehavior);
 		func.call(world, controller);
 		world.addBehavior(collisionBehavior);
 	};
-	
+
 	var handleInput = function(status) {
 		var diff = input.statusDiff(status);
 		if (inGame) {
@@ -270,24 +271,20 @@ require({
 		} else if (diff.bothDown() && gameEnabled) {
 			console.log("game started");
 			document.body.className = 'in-game';
-			$("#tiled-image-overlay").hide(1000);
+			$("#game-start-overlay").hide(100);
 			startGame();
 		}
 	};
 
-	/*$(document).keypress(function(event) {
-		console.log("keypress");
-		var key = input.getKeyCode(event);
-		handleInput(event, key);
-	});*/
+	/*
+	 * $(document).keypress(function(event) { console.log("keypress"); var key =
+	 * input.getKeyCode(event); handleInput(event, key); });
+	 */
 
-	/*$(document).keydown(function(event) {
-		console.log("keydown");
-		if (inGame) {
-			var key = input.getKeyCode(event);
-			handleInput(event, key);
-		}
-	});*/
+	/*
+	 * $(document).keydown(function(event) { console.log("keydown"); if (inGame) {
+	 * var key = input.getKeyCode(event); handleInput(event, key); } });
+	 */
 
 	// subscribe to ticker and start looping
 	Physics.util.ticker.subscribe(function(time) {

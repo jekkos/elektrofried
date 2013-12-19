@@ -7,6 +7,8 @@ var gifBuilder = require('./gifbuilder');
 var tileBuilder = require('./tilebuilder').tileBuilder;
 var serialConnector = require('./serialconnector').serialConnector;
 var frameGrabber = require('./framegrabber').frameGrabber;
+
+var tweet = require('./twitterer').tweet;
 var frame = require('./framegrabber').frame;
 
 exports.app = (function() {
@@ -35,29 +37,37 @@ exports.app = (function() {
 	var lastFileName;
 	var lastTweet;
 	
-	var tweetPic = function(socket) {
+	var postTweet = function(data) {
+		lastTweet = Object.spawn(tweet, {
+			message : data.message || config.DEFAULT_MESSAGE, 
+			score: score, 
+			name: data.name, 
+			email : data.email,
+			placeId : data.placeId || options.placeId, 
+			fileName : data.fileName || lastFileName});
+		logger.info("posting tweet " + JSON.stringify(lastTweet)); 
+		twitterer.tweet(lastTweet);
+	};
+	
+	var prepareTweet = function(socket) {
 		return function(data) {
 			if (!lastFileName) {
-				lastFileName = buildTile(socket);
+				lastFileName = buildTile(socket, postTweet);
+			} else {
+				postTweet(data);
 			}
-			lastTweet = Object.spawn(twitterer.tweet, {
-				message : data.message || config.DEFAULT_MESSAGE, 
-				score: score, 
-				name: data.name, 
-				email : data.email,
-				placeId : data.placeId || options.placeId, 
-				fileName : lastFileName});
-			logger.info("Tweet object created " + JSON.stringify(lastTweet)); 
-			twitterer.tweet(lastTweet);
 		};
 	};
 	
-	var buildTile = function(socket) {
+	var buildTile = function(socket, callback) {
 		var fileName = config.TMP_TILE_DIR + "/" + new Date().getMilliseconds() + ".jpg";
 		tileBuilder.build(fileName, frameGrabber.getFrames(), options.dimensions, function (err) {
 			if (err) {
 				logger.error(err);
 			} else {
+				callback && callback.call(this, {
+					fileName : fileName
+				});
 				socket.emit('tile-built', {
 					url : config.SERVER_URL + fileName
 				});	
@@ -78,12 +88,13 @@ exports.app = (function() {
 	};
 	
 	frameGrabber.init(dimensions, function(frame) {
-		for (var i = 0; i < sockets.length; i++) {
-			sockets[i].emit("frame-grabbed", frame.getUrl());
+		for (index in sockets) {
+			logger.debug("sending frame-grabbed");
+			sockets[index].emit("frame-grabbed", frame.getUrl());
 		}
 	});
 	
-	logger.info("Initializing serial connector " + JSON.stringify(serialConnector));
+	logger.info("initializing serial connector " + JSON.stringify(serialConnector));
 	serialConnector.init(function(status) {
 		logger.debug("sending input-received");
 		for(index in sockets) {
@@ -93,7 +104,7 @@ exports.app = (function() {
 	
 	io.on('connection', function(socket) {
 		sockets.push(socket);
-		logger.info('socket opened!');
+		logger.info('socket opened to ' + socket.handshake.address);
 		socket.on('disconnect', function() {
 			sockets.splice(sockets.indexOf(socket), 1);
 		});
@@ -121,7 +132,7 @@ exports.app = (function() {
 			// create tile and send back!
 			lastFileName = buildTile(socket);
 		});
-		socket.on('tweet', tweetPic(socket));
+		socket.on('tweet', prepareTweet(socket));
 		socket.on('options', parseOptions(socket));
 		socket.emit('options', options);
 	});

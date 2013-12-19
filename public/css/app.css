@@ -33,6 +33,18 @@ canvas {
     border: 2px solid white;
 }
 
+.progress.vertical {
+    position: absolute;
+    width: 20px;
+    min-height: 400px;
+    margin: auto;
+    left: 100px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+}
+
 .wrapper {
     width: 512px;
     margin: 0 auto;
@@ -109,16 +121,17 @@ canvas {
     text-align: center;
 }
 
+#game-start-overlay {
+	background-color: #EEEEEE;
+    position: relative;
+    z-index: 2;
+    width: 75%;
+    height: 90%;
+    text-align: center;
+    border-radius:30px;
+}
+
 #active-item {
 	text-align: center;
 	margin: 50px;
-}
-
-.progress-vertical {
-	position: relative;
-	width: 30px;
-	min-height: 400px;
-	float: left;
-	margin-right: 5px;
-	margin-top: 1em;
 }

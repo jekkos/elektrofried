@@ -51,8 +51,8 @@ var serialConnector = (function() {
 			logger.info('serialport ' +  config.TTY_NAME +  ' opened at ' + config.BAUD_RATE + " bauds");
 			var parseStatus = function(data) {
 				return {
-					links : data.charAt(0),
-					rechts : data.charAt(1),
+					rechts : data.charAt(0),
+					links : data.charAt(1),
 					shock : data.charAt(2),
 					mode : data.charAt(3)
 				};
